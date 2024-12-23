@@ -3,12 +3,14 @@ package db
 import (
 	"database/sql"
 	"fmt"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 var db *sql.DB
 
-func init() {
-	db, err := sql.Open("mysql", "root:passwd@tcp(0.0.0.0:3306)/user")
+func Init() {
+	db, err := sql.Open("sqlite3", "./apimonitor.db")
 
 	if err != nil {
 		panic(err)
@@ -21,14 +23,18 @@ func init() {
 	}
 
 	fmt.Print("Pong\n")
-	defer db.Close()
+	createDatabase()
 }
 func createDatabase() {
-	_, err := db.Exec("CREATE DATABASE IF NOT EXISTS api_monitor")
+	_, err := db.Exec(createTablesSQL)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Print("Successfully Created\n")
+	fmt.Print("Tables Created Successfully\n")
 	defer db.Close()
 
+}
+
+func Close() {
+	db.Close()
 }
