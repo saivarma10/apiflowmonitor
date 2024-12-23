@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create API Transaction</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        .api-step {
+            border: 1px solid #ccc;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            position: relative;
+        }
+        .api-step label {
+            font-weight: bold;
+        }
+        .api-step input, .api-step select {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .buttons {
+            text-align: right;
+        }
+        .buttons input {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .buttons input[type="button"] {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .buttons input[type="submit"] {
+            background-color: #008CBA;
+            color: white;
+        }
+        .delete-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Create API Transaction</h1>
+<p>Configure your API steps below:</p>
+
+<form id="apiForm" onsubmit="saveTransaction(event)">
+    <div id="formSteps">
+        <div class="api-step">
+            <label for="url">URL</label>
+            <input type="text" name="url" class="url" required>
+            <label for="frequency">Frequency</label>
+            <input type="text" name="frequency" class="frequency" required>
+            <label for="authToken">Auth Token</label>
+            <input type="text" name="authToken" class="authToken">
+            <label for="headers">Headers</label>
+            <input type="text" name="headers" class="headers">
+            <label for="payload">Request Payload</label>
+            <input type="text" name="payload" class="payload">
+            <label for="apiCallType">API Call Type</label>
+            <select name="apiCallType" class="apiCallType">
+                <option value="GET">GET</option>
+                <option value="POST">POST</option>
+                <option value="PUT">PUT</option>
+                <option value="DELETE">DELETE</option>
+            </select>
+            <button type="button" class="delete-button" onclick="deleteFormStep(this)">Delete</button>
+        </div>
+    </div>
+
+    <div class="buttons">
+        <input type="button" value="Add Step" onclick="addFormStep()">
+        <input type="submit" value="Submit">
+    </div>
+</form>
+
+<script>
+    let stepCount = 1;
+
+    function addFormStep() {
+        if (stepCount >= 10) {
+            alert("You can only add up to 10 steps.");
+            return;
+        }
+
+        const formStepsContainer = document.getElementById("formSteps");
+
+        const newFormStep = document.createElement("div");
+        newFormStep.classList.add("api-step");
+
+        newFormStep.innerHTML = `
+            <label for="url">URL</label>
+            <input type="text" name="url" class="url" required>
+            <label for="frequency">Frequency</label>
+            <input type="text" name="frequency" class="frequency" required>
+            <label for="authToken">Auth Token</label>
+            <input type="text" name="authToken" class="authToken">
+            <label for="headers">Headers</label>
+            <input type="text" name="headers" class="headers">
+            <label for="payload">Request Payload</label>
+            <input type="text" name="payload" class="payload">
+            <label for="apiCallType">API Call Type</label>
+            <select name="apiCallType" class="apiCallType">
+                <option value="GET">GET</option>
+                <option value="POST">POST</option>
+                <option value="PUT">PUT</option>
+                <option value="DELETE">DELETE</option>
+            </select>
+            <button type="button" class="delete-button" onclick="deleteFormStep(this)">Delete</button>
+        `;
+
+        formStepsContainer.appendChild(newFormStep);
+        stepCount++;
+    }
+
+    function deleteFormStep(button) {
+        const formStep = button.parentElement;
+        formStep.remove();
+        stepCount--;
+    }
+
+    function saveTransaction(event) {
+        event.preventDefault();
+
+        const formSteps = document.querySelectorAll('.api-step');
+        const transaction = {
+            id: Date.now(),
+            name: `Transaction ${Date.now()}`,
+            steps: []
+        };
+
+        formSteps.forEach(step => {
+            const url = step.querySelector('.url').value;
+            const frequency = step.querySelector('.frequency').value;
+            const authToken = step.querySelector('.authToken').value;
+            const headers = step.querySelector('.headers').value;
+            const payload = step.querySelector('.payload').value;
+            const apiCallType = step.querySelector('.apiCallType').value;
+
+            transaction.steps.push({ url, frequency, authToken, headers, payload, apiCallType });
+        });
+
+        const apiTransactions = JSON.parse(localStorage.getItem('apiTransactions')) || [];
+        apiTransactions.push(transaction);
+        localStorage.setItem('apiTransactions', JSON.stringify(apiTransactions));
+
+        window.location.href = 'index.html';
+    }
+
+    function loadTransaction() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const id = urlParams.get('id');
+        if (id) {
+            const apiTransactions = JSON.parse(localStorage.getItem('apiTransactions')) || [];
+            const transaction = apiTransactions.find(t => t.id == id);
+            if (transaction) {
+                document.getElementById('formSteps').innerHTML = '';
+                transaction.steps.forEach(step => {
+                    addFormStep();
+                    const formStep = document.querySelector('.api-step:last-child');
+                    formStep.querySelector('.url').value = step.url;
+                    formStep.querySelector('.frequency').value = step.frequency;
+                    formStep.querySelector('.authToken').value = step.authToken;
+                    formStep.querySelector('.headers').value = step.headers;
+                    formStep.querySelector('.payload').value = step.payload;
+                    formStep.querySelector('.apiCallType').value = step.apiCallType;
+                });
+            }
+        }
+    }
+
+    window.onload = loadTransaction;
+</script>
+
+</body>
+</html>
