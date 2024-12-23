@@ -4,6 +4,7 @@ import (
 	api "apimonitor/internal/api"
 	logger "apimonitor/pkg/logger"
 	db "apimonitor/internal/db"
+	config "apimonitor/internal/config"
 	"net/http"
 )
 
@@ -11,7 +12,14 @@ func ping() string {
 	return "pong"
 }
 func main() {
-	db.Init()
+	_, err := config.ReadConfigFile("../conf/config.json")
+	if err != nil {
+		panic(err)
+	}
+	err = db.Init()
+	if err !=nil{
+		panic(err)
+	}
 	println(ping())
 	log := logger.GetLogger()
 	// resp := processor.CurlGet("https://www.google.com")
