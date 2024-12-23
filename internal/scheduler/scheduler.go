@@ -90,35 +90,3 @@ func (tm *TaskManager) Start() {
 func (tm *TaskManager) Stop() {
 	tm.scheduler.Stop()
 }
-
-func main() {
-	// Example usage
-	tm := NewTaskManager()
-
-	// Create a sample task
-	err := tm.CreateTask("task1", "Print Hello", 5*time.Second, func() {
-		fmt.Println("Hello, World!")
-	})
-	if err != nil {
-		fmt.Printf("Error creating task: %v\n", err)
-		return
-	}
-
-	tm.Start()
-
-	time.Sleep(10 * time.Second)
-	err = tm.UpdateTask("task1", 2*time.Second)
-	if err != nil {
-		fmt.Printf("Error updating task: %v\n", err)
-		return
-	}
-
-	time.Sleep(10 * time.Second)
-	err = tm.DeleteTask("task1")
-	if err != nil {
-		fmt.Printf("Error deleting task: %v\n", err)
-		return
-	}
-
-	select {}
-}
