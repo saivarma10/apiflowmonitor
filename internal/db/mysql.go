@@ -7,32 +7,32 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+// var db *sql.DB
+// type DBConnection struct {
 var db *sql.DB
+// }
 
-func Init() {
+func Init() error {
 	db, err := sql.Open("sqlite3", "./apimonitor.db")
-
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("error connecting to database: %v", err)
 	}
-
 	err = db.Ping()
-
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("error pinging database: %v", err)
 	}
 
 	fmt.Print("Pong\n")
-	createDatabase()
+	return createDatabase()
+	
 }
-func createDatabase() {
+func createDatabase() error {
 	_, err := db.Exec(createTablesSQL)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	fmt.Print("Tables Created Successfully\n")
-	defer db.Close()
-
+	return nil
 }
 
 func Close() {

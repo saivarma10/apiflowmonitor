@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Flow Monitor - Home</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        .buttons {
+            margin-top: 20px;
+        }
+        .buttons input {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .buttons input[type="button"] {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .api-list {
+            margin-top: 20px;
+        }
+        .api-item {
+            border: 1px solid #ccc;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+
+<h1>API Flow Monitor</h1>
+<p>Welcome to the API Flow Monitor. Please choose an option below:</p>
+
+<div class="buttons">
+    <input type="button" value="Create API Transaction" onclick="window.location.href='create.html'">
+</div>
+
+<h2>Configured API Transactions</h2>
+<div class="api-list" id="apiList">
+    <!-- List of configured API transactions will be displayed here -->
+</div>
+
+<script>
+    function loadApiTransactions() {
+        const apiTransactions = JSON.parse(localStorage.getItem('apiTransactions')) || [];
+        const apiList = document.getElementById('apiList');
+        apiList.innerHTML = '';
+
+        apiTransactions.forEach(transaction => {
+            const apiItem = document.createElement('div');
+            apiItem.classList.add('api-item');
+            apiItem.innerHTML = `
+                <strong>${transaction.name}</strong><br>
+                URL: ${transaction.url}<br>
+                <button onclick="editTransaction(${transaction.id})">Edit</button>
+                <button onclick="deleteTransaction(${transaction.id})">Delete</button>
+            `;
+            apiList.appendChild(apiItem);
+        });
+    }
+
+    function editTransaction(id) {
+        window.location.href = `create.html?id=${id}`;
+    }
+
+    function deleteTransaction(id) {
+        const apiTransactions = JSON.parse(localStorage.getItem('apiTransactions')) || [];
+        const index = apiTransactions.findIndex(transaction => transaction.id === id);
+        if (index !== -1) {
+            apiTransactions.splice(index, 1);
+            localStorage.setItem('apiTransactions', JSON.stringify(apiTransactions));
+            loadApiTransactions();
+        }
+    }
+
+    window.onload = loadApiTransactions;
+</script>
+
+</body>
+</html>
