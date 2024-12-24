@@ -1,6 +1,11 @@
 package utils
 
-import "github.com/google/uuid"
+import (
+	"fmt"
+	"strings"
+
+	"github.com/google/uuid"
+)
 
 type Url_Config struct {
 	Url     string `json:"url"`
@@ -17,4 +22,22 @@ type TaskRequest struct {
 
 func GenerateUUID() string {
 	return uuid.New().String()
+}
+func GetKeyOrValueStartingWithDollar(m map[string]interface{}) (string, interface{}) {
+	for key, value := range m {
+		if strings.HasPrefix(key, "$") || strings.HasPrefix(fmt.Sprint(value), "$") {
+			return key, value
+		}
+	}
+	return "", nil
+}
+func SearchDynamicVariable(m []map[string]interface{}, match string) (string, interface{}) {
+	for _, v := range m {
+		for key, value := range v {
+			if strings.HasPrefix(key, match) || strings.HasPrefix(fmt.Sprint(value), match) {
+				return key, value
+			}
+		}
+	}
+	return "", nil
 }
