@@ -1,0 +1,34 @@
+{
+    "apis": [
+      {
+        "url": "https://api.example.com/resource1",
+        "method": "GET",
+        "request_structure": "{}",
+        "response_structure": "{}"
+      },
+      {
+        "url": "https://api.example.com/resource2",
+        "method": "POST",
+        "request_structure": "{\"key\":\"value\"}",
+        "response_structure": "{\"result\":\"data\"}"
+      }
+    ],
+    "transactions": [
+      {
+        "name": "Sample Transaction",
+        "apis": [
+          {
+            "api_index": 0,
+            "sequence": 1,
+            "dependency": {}
+          },
+          {
+            "api_index": 1,
+            "sequence": 2,
+            "dependency": {"key_from_response":"value"}
+          }
+        ]
+      }
+    ]
+  }
+  
