@@ -1,7 +1,9 @@
 package api
 
 import (
+	processor "apimonitor/internal/processor"
 	scheduler "apimonitor/internal/scheduler"
+	util "apimonitor/pkg/utils"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -10,15 +12,10 @@ import (
 
 var tm = scheduler.NewTaskManager()
 
-type TaskRequest struct {
-	TaskID    string `json:"task_id"`
-	Frequency int    `json:"frequency"`
-}
-
 func addTask(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println("Received request to add task.")
-	var req TaskRequest
+	var req util.TaskRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, fmt.Sprintf("Error decoding request: %v", err), http.StatusBadRequest)
 		return
@@ -27,9 +24,7 @@ func addTask(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("Frequency must be greater than 0"), http.StatusBadRequest)
 		return
 	}
-	err := tm.CreateTask(req.TaskID, "task1", time.Duration(req.Frequency)*time.Second, func() {
-		fmt.Println("Hello, World!")
-	})
+	err := tm.CreateTask(req.TaskID, req.TaskName, time.Duration(req.Frequency)*time.Second, processor.CurlRun(req.Config))
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error creating task: %v", err), http.StatusInternalServerError)
 		return
@@ -43,7 +38,7 @@ func addTask(w http.ResponseWriter, r *http.Request) {
 func UpdateTask(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println("Received request to update task.")
-	var req TaskRequest
+	var req util.TaskRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, fmt.Sprintf("Error decoding request: %v", err), http.StatusBadRequest)
 		return
@@ -65,7 +60,7 @@ func UpdateTask(w http.ResponseWriter, r *http.Request) {
 func DeleteTask(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println("Received request to delete task.")
-	var req TaskRequest
+	var req util.TaskRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, fmt.Sprintf("Error decoding request: %v", err), http.StatusBadRequest)
 		return
@@ -83,7 +78,7 @@ func DeleteTask(w http.ResponseWriter, r *http.Request) {
 func GetTask(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println("Received request to get task.")
-	var req TaskRequest
+	var req util.TaskRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, fmt.Sprintf("Error decoding request: %v", err), http.StatusBadRequest)
 		return

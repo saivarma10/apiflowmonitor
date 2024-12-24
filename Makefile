@@ -5,6 +5,10 @@ GOCMD    := $(GO) run
 GOFLAGS  := -mod=vendor
 
 BINARY   := apimonitor
+C_BINARY = transaction_monitor
+transaction_monitor: cmd/c_program/transaction_monitor.c
+	@gcc -o cmd/c_program/assets/$(C_BINARY) cmd/c_program/transaction_monitor.c -lcurl
+
 
 .PHONY: all
 all: build
