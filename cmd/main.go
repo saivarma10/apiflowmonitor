@@ -2,10 +2,10 @@ package main
 
 import (
 	api "apimonitor/internal/api"
+	config "apimonitor/internal/config"
+	db "apimonitor/internal/db"
 	"apimonitor/internal/processor"
 	logger "apimonitor/pkg/logger"
-	db "apimonitor/internal/db"
-	config "apimonitor/internal/config"
 	"apimonitor/pkg/utils"
 	"net/http"
 )
@@ -14,12 +14,12 @@ func ping() string {
 	return "pong"
 }
 func main() {
-	_, err := config.ReadConfigFile("../conf/config.json")
+	_, err := config.ReadConfigFile("conf/config.json")
 	if err != nil {
 		panic(err)
 	}
 	err = db.Init()
-	if err !=nil{
+	if err != nil {
 		panic(err)
 	}
 	println(ping())

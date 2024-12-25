@@ -50,7 +50,7 @@ func runTransactionMonitorBinary(args []string) (*Response, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse response JSON: %w", err)
 	}
-	fmt.Println(response)
+	// fmt.Println(response)
 	return &response, nil
 }
 
@@ -63,33 +63,35 @@ func CurlRun(config []util.Url_Config) func() {
 			// var resp *Response
 			var jsonMap map[string]interface{}
 			json.Unmarshal([]byte(c.Payload), &jsonMap)
-			fmt.Println("jsonMap is ", jsonMap)
+			fmt.Printf("jsonMap is %v\n", jsonMap)
 			dynamicVar, _ := util.GetKeyOrValueStartingWithDollar(jsonMap)
-			fmt.Println("dynamicVar is ", dynamicVar)
+			// fmt.Println("dynamicVar is ", dynamicVar)
 			if dynamicVar != "" {
 				k, v := util.SearchDynamicVariable(TotalResponseData, dynamicVar)
-				fmt.Println("k is ", k)
-				fmt.Println("v is ", v)
+				// fmt.Println("k is ", k)
+				// fmt.Println("v is ", v)
 				// we have to replace this key and value  in c.Payload
-				if k == "" {
+				if v != "" {
 					k, _ = v.(string)
 				}
-				c.Payload = strings.Replace(c.Payload, dynamicVar, fmt.Sprint(k), -1)
+				fmt.Printf("Dynamic variable is %v and the replace string is %v\n", dynamicVar, fmt.Sprint(k))
+				c.Payload = strings.Replace(c.Payload, "$"+dynamicVar, fmt.Sprint(k), -1)
 			}
 			args := []string{
 				c.Url,
 				c.Method,
-				c.Auth,
+				"",
+				"",
 				c.Payload,
 			}
 			resp, err := runTransactionMonitorBinary(args)
-			fmt.Println("Response and error: ", resp, err)
+			fmt.Printf("Response %v and error: %v \n", resp, err)
 			TotalResponseData = append(TotalResponseData, resp.ResponseData)
 			resp2 = append(resp2, resp)
 			//store reponse to mysql
 		}
 		for i := range resp2 {
-			fmt.Printf("All Responses:%v err %v", *resp2[i], err)
+			fmt.Printf("All Responses:%v \t err %v\n", *resp2[i], err)
 		}
 
 	}
