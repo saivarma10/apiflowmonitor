@@ -12,6 +12,11 @@ The project allows you to define an api transaction to run in a frequency based 
 
 This project exposes a set of APIs to manage tasks. Below are the details for each API endpoint.
 
+### Important Note
+
+Currently, **all request and response payloads must be in JSON format**. Other formats (such as XML, YAML, etc.) are not supported at this time. We plan to support additional payload formats as an enhancement in the future.
+
+
 ## 1. **Create Task** - `/create`
 
 ### **Method**: `POST`
