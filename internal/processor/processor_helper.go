@@ -5,8 +5,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"os"
 	"os/exec"
 	"strings"
+	"time"
 
 	util "apimonitor/pkg/utils"
 	// curl "github.com/andelf/go-curl"
@@ -54,7 +56,8 @@ func runTransactionMonitorBinary(args []string) (*Response, error) {
 	return &response, nil
 }
 
-func CurlRun(config []util.Url_Config) func() {
+func CurlRun(config []util.Url_Config, task_id string) func() {
+	var resperr error
 	return func() {
 		var resp2 []*Response
 		var TotalResponseData []map[string]interface{}
@@ -84,14 +87,33 @@ func CurlRun(config []util.Url_Config) func() {
 				"",
 				c.Payload,
 			}
-			resp, err := runTransactionMonitorBinary(args)
-			fmt.Printf("Response %v and error: %v \n", resp, err)
+			resp, resperr := runTransactionMonitorBinary(args)
+			fmt.Printf("Response %v and error: %v \n", resp, resperr)
 			TotalResponseData = append(TotalResponseData, resp.ResponseData)
 			resp2 = append(resp2, resp)
 			//store reponse to mysql
 		}
 		for i := range resp2 {
-			fmt.Printf("All Responses:%v \t err %v\n", *resp2[i], err)
+			fmt.Printf("\n Task ID %v All Responses:%v \t err %v\n", task_id, *resp2[i], resperr)
+		}
+		f, err := os.OpenFile("response.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if err != nil {
+			log.Info().Msgf("Error opening file: %v", err)
+		}
+		defer f.Close()
+		for i := range resp2 {
+			var respPrint string
+			if resperr != nil {
+				respPrint = fmt.Sprintf("\nTime %v Task ID %v All Responses:%v \t err %v\n", time.Now().Unix(), task_id, *resp2[i], resperr)
+			} else {
+				respPrint = fmt.Sprintf("\nTime %v Task ID %v All Responses:%v \n", time.Now().Unix(), task_id, *resp2[i])
+			}
+			if _, err := f.WriteString(respPrint); err != nil {
+				log.Info().Msgf("Error writing to file: %v", err)
+			}
+		}
+		if _, err := f.WriteString("---------------------------------------------------------------------------------------------"); err != nil {
+			log.Info().Msgf("Error writing to file: %v", err)
 		}
 
 	}

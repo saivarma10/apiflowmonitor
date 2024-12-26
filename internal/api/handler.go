@@ -25,7 +25,7 @@ func addTask(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("Frequency must be greater than 0"), http.StatusBadRequest)
 		return
 	}
-	err := tm.CreateTask(req.TaskID, req.TaskName, time.Duration(req.Frequency)*time.Second, processor.CurlRun(req.Config))
+	err := tm.CreateTask(req.TaskID, req.TaskName, time.Duration(req.Frequency)*time.Second, processor.CurlRun(req.Config,req.TaskID))
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error creating task: %v", err), http.StatusInternalServerError)
 		return

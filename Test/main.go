@@ -85,13 +85,13 @@ the above program is a simple http server that listens on port 9090 and has 3 en
 
 i want to use this to test our other program that sends http requests to multiple endpoints
 
-curl -X POST http://localhost:8081/create \                                                                                                                                ❮main|✚3...4
+curl -X POST http://localhost:8081/create \                                                                                                                                ❮main|✚6...4
 -H "Content-Type: application/json" \
 -d '{
-    "TaskID": "123456",
-    "TaskName": "Updated Task Name2",
-    "Frequency": 120,
-    "Config": [
+    "task_id": "123456",
+    "taskname": "Updated Task Name2",
+    "frequency": 2,
+    "config": [
         {
             "Url": "http://localhost:9090/1",
             "Method": "POST",
@@ -108,5 +108,6 @@ curl -X POST http://localhost:8081/create \                                     
         }
     ]
 }'
+
 
 */
