@@ -1,5 +1,5 @@
-# apiflowmonitor
-The project allows you to define an api transaction to run in a frequency based manner , so that your api validations becomes easy
+# Api Flow Monitor
+The project allows you to define a workflow of API transactions that run in a series. Each API call can dynamically use variables derived from the responses of previous steps. You can set a frequency for these transactions, simplifying your API validation tasks and automating repetitive processes.
 
 
 ![My Image](docs/architecture/arch.png)
@@ -39,6 +39,31 @@ This endpoint allows you to create a new task by providing the necessary details
         }
     ]
 }
+
+Payload 2:
+
+'{
+    "task_id": "123456",
+    "taskname": "Updated Task Name2",
+    "frequency": 2,
+    "config": [
+        {
+            "Url": "http://localhost:9090/1",
+            "Method": "POST",
+            "Auth": "",
+            "Payload": "{\"user\": \"sai\", \"password\": \"pass\"}"
+        }, {
+            "Url": "http://localhost:9090/2",    
+            "Method": "POST", 
+            "Auth": "",
+            "Payload": "{\"user\": \"$user\", \"exists\": \"true\"}"  
+        }, {
+            "Url": "http://localhost:9090/3",    
+            "Method": "GET"
+        }
+    ]
+}'
+
 ```
 
 ### **Description**:
