@@ -14,7 +14,7 @@ var tm = scheduler.NewTaskManager()
 
 func addTask(w http.ResponseWriter, r *http.Request) {
 
-	fmt.Println("Received request to add task. %v")
+	fmt.Println("Received request to add task.")
 	var req util.TaskRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, fmt.Sprintf("Error decoding request: %v", err), http.StatusBadRequest)
