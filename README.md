@@ -40,9 +40,10 @@ This endpoint allows you to create a new task by providing the necessary details
     ]
 }
 
-Payload 2:
 
-'{
+
+
+{
     "task_id": "123456",
     "taskname": "Updated Task Name2",
     "frequency": 2,
@@ -62,7 +63,7 @@ Payload 2:
             "Method": "GET"
         }
     ]
-}'
+}
 
 ```
 
