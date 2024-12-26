@@ -1,6 +1,6 @@
 module apimonitor
 
-go 1.21.5
+go 1.23
 
 toolchain go1.22.10
 
