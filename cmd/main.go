@@ -2,18 +2,13 @@ package main
 
 import (
 	api "apimonitor/internal/api"
-	config "apimonitor/internal/config"
 	db "apimonitor/internal/db"
 	logger "apimonitor/pkg/logger"
 	"net/http"
 )
 
 func main() {
-	_, err := config.ReadConfigFile("conf/config.json")
-	if err != nil {
-		panic(err)
-	}
-	err = db.Init()
+	err := db.Init()
 	if err != nil {
 		panic(err)
 	}

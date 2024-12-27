@@ -56,7 +56,7 @@ func runTransactionMonitorBinary(args []string) (*Response, error) {
 	return &response, nil
 }
 
-func CurlRun(config []util.Url_Config, task_id string) func() {
+func CurlRun(config []util.TransactionAPI, task_id string) func() {
 	var resperr error
 	return func() {
 		var resp2 []*Response
@@ -65,12 +65,12 @@ func CurlRun(config []util.Url_Config, task_id string) func() {
 		for _, c := range config {
 			// var resp *Response
 			var jsonMap map[string]interface{}
-			json.Unmarshal([]byte(c.Payload), &jsonMap)
+			json.Unmarshal([]byte(c.Request), &jsonMap)
 			fmt.Printf("jsonMap is %v\n", jsonMap)
 			dynamicVar, _ := util.GetKeyOrValueStartingWithDollar(jsonMap)
 			// fmt.Println("dynamicVar is ", dynamicVar)
 			if dynamicVar != "" {
-				k, v := util.SearchDynamicVariable(TotalResponseData, dynamicVar)
+				k, v := util.SearchDynamicVariable(TotalResponseData[c.Dependency[dynamicVar].APIIndex], dynamicVar)
 				// fmt.Println("k is ", k)
 				// fmt.Println("v is ", v)
 				// we have to replace this key and value  in c.Payload
@@ -78,14 +78,14 @@ func CurlRun(config []util.Url_Config, task_id string) func() {
 					k, _ = v.(string)
 				}
 				fmt.Printf("Dynamic variable is %v and the replace string is %v\n", dynamicVar, fmt.Sprint(k))
-				c.Payload = strings.Replace(c.Payload, "$"+dynamicVar, fmt.Sprint(k), -1)
+				c.Request = strings.Replace(c.Request, "$"+dynamicVar, fmt.Sprint(k), -1)
 			}
 			args := []string{
-				c.Url,
+				c.URL,
 				c.Method,
 				"",
 				"",
-				c.Payload,
+				c.Request,
 			}
 			resp, resperr := runTransactionMonitorBinary(args)
 			fmt.Printf("Response %v and error: %v \n", resp, resperr)

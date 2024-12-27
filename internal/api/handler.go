@@ -20,30 +20,36 @@ func addTask(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("Error decoding request: %v", err), http.StatusBadRequest)
 		return
 	}
-	fmt.Println("request is ", req)
-	if req.Frequency <= 0 {
-		http.Error(w, fmt.Sprintf("Frequency must be greater than 0"), http.StatusBadRequest)
-		return
+	for _,transaction := range req.Transactions{
+		fmt.Println("Executing transaction ",transaction.TransactionID)
+		if transaction.Frequency <= 0 {
+			http.Error(w, fmt.Sprintf("Frequency must be greater than 0"), http.StatusBadRequest)
+			continue
+		}
+
+		err := tm.CreateTask(transaction.TransactionID, transaction.Name, time.Duration(transaction.Frequency)*time.Second, processor.CurlRun(transaction.APIs,transaction.TransactionID))
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Error creating task: %v", err), http.StatusInternalServerError)
+			return
+		} else {
+			fmt.Println("Task created successfully")
+		}
+	
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("Task added successfully"))
 	}
-	err := tm.CreateTask(req.TaskID, req.TaskName, time.Duration(req.Frequency)*time.Second, processor.CurlRun(req.Config,req.TaskID))
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Error creating task: %v", err), http.StatusInternalServerError)
-		return
-	} else {
-		fmt.Println("Task created successfully")
-	}
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Task added successfully"))
+	
 }
 
 func UpdateTask(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println("Received request to update task.")
-	var req util.TaskRequest
+	var req util.UpdateRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, fmt.Sprintf("Error decoding request: %v", err), http.StatusBadRequest)
 		return
 	}
+	
 	if req.Frequency <= 0 {
 		http.Error(w, fmt.Sprintf("Frequency must be greater than 0"), http.StatusBadRequest)
 		return
@@ -61,7 +67,7 @@ func UpdateTask(w http.ResponseWriter, r *http.Request) {
 func DeleteTask(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println("Received request to delete task.")
-	var req util.TaskRequest
+	var req util.Task
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, fmt.Sprintf("Error decoding request: %v", err), http.StatusBadRequest)
 		return
@@ -79,7 +85,7 @@ func DeleteTask(w http.ResponseWriter, r *http.Request) {
 func GetTask(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println("Received request to get task.")
-	var req util.TaskRequest
+	var req util.Task
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, fmt.Sprintf("Error decoding request: %v", err), http.StatusBadRequest)
 		return

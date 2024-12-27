@@ -3,11 +3,53 @@ package db
 import (
 	"database/sql"
 	"fmt"
-	"encoding/json"
-	"apimonitor/internal/config"
 
 	_ "github.com/mattn/go-sqlite3"
 )
+
+// Create tables
+var createTablesSQL = []string{
+	`CREATE TABLE IF NOT EXISTS api_config (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		url TEXT NOT NULL,
+		method TEXT NOT NULL,
+		request TEXT
+	);`,
+
+	`CREATE TABLE IF NOT EXISTS transactions (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		name TEXT NOT NULL
+	);`,
+
+	`CREATE TABLE IF NOT EXISTS transaction_api (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		transaction_id INTEGER NOT NULL,
+		api_id INTEGER NOT NULL,
+		sequence INTEGER NOT NULL,
+		dependency TEXT,
+		FOREIGN KEY (transaction_id) REFERENCES transactions(id),
+		FOREIGN KEY (api_id) REFERENCES api_config(id)
+	);`,
+
+	`CREATE TABLE IF NOT EXISTS reponse_data (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		transaction_id INTEGER NOT NULL,
+		api_id INTEGER NOT NULL,
+		response TEXT,
+		FOREIGN KEY (transaction_id) REFERENCES transactions(id),
+		FOREIGN KEY (api_id) REFERENCES api_config(id)
+	);`,
+
+	`CREATE TABLE IF NOT EXISTS api_statistics (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		api_id INTEGER NOT NULL,
+		status_code INTEGER NOT NULL,
+		response_time REAL NOT NULL,
+		executed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (api_id) REFERENCES api_config(id)
+	);`,
+	
+}
 
 // var db *sql.DB
 // type DBConnection struct {
@@ -39,47 +81,3 @@ func Close() {
 	db.Close()
 }
 
-
-func StoreConfigInDB(config *config.ConfigFile) error {
-	// Insert API configurations
-	for _, api := range config.APIs {
-		_, err := db.Exec(
-			"INSERT INTO api_config (url, method, request_structure, response_structure) VALUES (?, ?, ?, ?)",
-			api.URL, api.Method, api.RequestStructure, api.ResponseStructure,
-		)
-		if err != nil {
-			return fmt.Errorf("failed to insert API config: %v", err)
-		}
-	}
-
-	// Insert transactions
-	for _, transaction := range config.Transactions {
-		result, err := db.Exec("INSERT INTO transaction (name) VALUES (?)", transaction.Name)
-		if err != nil {
-			return fmt.Errorf("failed to insert transaction: %v", err)
-		}
-
-		transactionID, err := result.LastInsertId()
-		if err != nil {
-			return fmt.Errorf("failed to get last insert ID for transaction: %v", err)
-		}
-
-		// Insert transaction APIs
-		for _, api := range transaction.APIs {
-			dependencyJSON, err := json.Marshal(api.Dependency)
-			if err != nil {
-				return fmt.Errorf("failed to marshal dependency: %v", err)
-			}
-
-			_, err = db.Exec(
-				"INSERT INTO transaction_api (transaction_id, api_id, sequence, dependency) VALUES (?, ?, ?, ?)",
-				transactionID, api.APIIndex+1, api.Sequence, string(dependencyJSON),
-			)
-			if err != nil {
-				return fmt.Errorf("failed to insert transaction API: %v", err)
-			}
-		}
-	}
-
-	return nil
-}
