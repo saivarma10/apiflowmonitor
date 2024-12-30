@@ -11,6 +11,7 @@ import (
 	"time"
 
 	util "apimonitor/pkg/utils"
+	db "apimonitor/internal/db"
 	// curl "github.com/andelf/go-curl"
 )
 
@@ -56,13 +57,17 @@ func runTransactionMonitorBinary(args []string) (*Response, error) {
 	return &response, nil
 }
 
-func CurlRun(config []util.TransactionAPI, task_id string) func() {
+func CurlRun(transaction *util.Transactions, task_id string) func() {
+	if transaction == nil {
+		return nil
+	}
 	var resperr error
 	return func() {
 		var resp2 []*Response
 		var TotalResponseData []map[string]interface{}
+		
 		var err error
-		for _, c := range config {
+		for idx, c := range transaction.APIs {
 			// var resp *Response
 			var jsonMap map[string]interface{}
 			json.Unmarshal([]byte(c.Request), &jsonMap)
@@ -91,7 +96,14 @@ func CurlRun(config []util.TransactionAPI, task_id string) func() {
 			fmt.Printf("Response %v and error: %v \n", resp, resperr)
 			TotalResponseData = append(TotalResponseData, resp.ResponseData)
 			resp2 = append(resp2, resp)
+			transaction.APIs[idx] = c
+
 			//store reponse to mysql
+		}
+
+		err = db.StoreTransaction(transaction, TotalResponseData)
+		if err != nil {
+			log.Info().Msgf("Error storing transaction: %v", err)
 		}
 		for i := range resp2 {
 			fmt.Printf("\n Task ID %v All Responses:%v \t err %v\n", task_id, *resp2[i], resperr)

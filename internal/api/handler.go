@@ -1,11 +1,14 @@
 package api
 
 import (
+	"apimonitor/internal/db"
 	processor "apimonitor/internal/processor"
 	scheduler "apimonitor/internal/scheduler"
+	"apimonitor/pkg/utils"
 	util "apimonitor/pkg/utils"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"net/http"
 	"time"
 )
@@ -27,7 +30,7 @@ func addTask(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		err := tm.CreateTask(transaction.TransactionID, transaction.Name, time.Duration(transaction.Frequency)*time.Second, processor.CurlRun(transaction.APIs,transaction.TransactionID))
+		err := tm.CreateTask(transaction.TransactionID, transaction.Name, time.Duration(transaction.Frequency)*time.Second, processor.CurlRun(&transaction,transaction.TransactionID))
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Error creating task: %v", err), http.StatusInternalServerError)
 			return
@@ -97,4 +100,25 @@ func GetTask(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(fmt.Sprintf("Task: %+v", task)))
+}
+
+
+func GetTransaction(w http.ResponseWriter, r *http.Request){
+	fmt.Println("Received request to get transaction.")
+	var req utils.GetTransaction
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, fmt.Sprintf("Error decoding request: %v", err), http.StatusBadRequest)
+		return
+	}
+	transaction, err := strconv.Atoi(req.TransactionID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error converting transaction ID to integer: %v", err), http.StatusBadRequest)
+		return
+	}
+	response, err := db.GetTransaction(transaction)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error getting transaction: %v", err), http.StatusInternalServerError)
+		return
+	}
+	w.Write([]byte(fmt.Sprintf("Transaction: %+v", response)))
 }

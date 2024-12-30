@@ -58,6 +58,24 @@ type TaskRequest struct {
 	Transactions []Transactions `json:"transactions"`
 }
 
+type TransactionAPIResp struct {
+	URL         string      `json:"url"`
+	Method      string      `json:"method"`
+	Request     string      `json:"request"`
+	Dependency map[string]Dependency `json:"dependency"`
+	Response    map[string]interface{} `json:"response"`
+}
+
+type TransactionResponse struct {
+	TransactionID string `json:"transaction_id"`
+	Name string `json:"name"`
+	APIs []TransactionAPIResp
+}
+
+type GetTransaction struct {
+	TransactionID string `json:"transaction_id"`
+}
+
 func GenerateUUID() string {
 	return uuid.New().String()
 }

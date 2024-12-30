@@ -17,5 +17,6 @@ func SetupRoutes() *mux.Router {
 	router.HandleFunc("/update", UpdateTask).Methods("POST")
 	router.HandleFunc("/delete", DeleteTask).Methods("POST")
 	router.HandleFunc("/get", GetTask).Methods("POST")
+	router.HandleFunc("/get-transaction", GetTransaction).Methods("POST")
 	return router
 }

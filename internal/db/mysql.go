@@ -1,8 +1,11 @@
 package db
 
 import (
+	"apimonitor/pkg/utils"
 	"database/sql"
+	"encoding/json"
 	"fmt"
+	"strconv"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -63,15 +66,14 @@ func Init() error {
 		return fmt.Errorf("error connecting to database: %v", err)
 	}
 	return createDatabase()
-	
+
 }
 func createDatabase() error {
-	for i, table := range createTablesSQL{
+	for _, table := range createTablesSQL{
 		_, err := db.Exec(table)
 		if err != nil {
 			return err
 		}
-		if i==1{break}
 	}
 	fmt.Print("Tables Created Successfully\n")
 	return nil
@@ -81,3 +83,107 @@ func Close() {
 	db.Close()
 }
 
+func StoreTransaction(transaction *utils.Transactions, response []map[string]interface{})error{
+	
+	// Insert transactions
+	result, err := db.Exec("INSERT INTO transactions (name) VALUES (?)", transaction.Name)
+	if err != nil {
+		return fmt.Errorf("failed to insert transaction: %v", err)
+	}
+
+	transactionID, err := result.LastInsertId()
+	if err != nil {
+		return fmt.Errorf("failed to get last insert ID for transaction: %v", err)
+	}
+
+	// Insert transaction APIs
+	for sequence, api := range transaction.APIs {
+		dependencyJSON, err := json.Marshal(api.Dependency)
+		if err != nil {
+			return fmt.Errorf("failed to marshal dependency: %v", err)
+		}
+
+		result, err := db.Exec("INSERT INTO api_config (url, method, request) VALUES (?, ?, ?)", api.URL, api.Method, api.Request)
+
+		if err != nil {
+			return fmt.Errorf("failed to insert API config: %v", err)
+		}
+		apiID, err := result.LastInsertId()
+		_, err = db.Exec(
+			"INSERT INTO transaction_api (transaction_id, api_id, sequence, dependency) VALUES (?, ?, ?, ?)",
+			transactionID, apiID, sequence, string(dependencyJSON),
+		)
+		if err != nil {
+			return fmt.Errorf("failed to insert transaction API: %v", err)
+		}
+
+		// Insert response data
+		responseJSON, err := json.Marshal(response[sequence])
+		if err != nil {
+			return fmt.Errorf("failed to marshal response data: %v", err)
+		}
+
+		_, err = db.Exec("INSERT INTO reponse_data (transaction_id, api_id, response) VALUES (?, ?, ?)", transactionID, apiID, string(responseJSON))
+		if err != nil {
+			return fmt.Errorf("failed to insert response data: %v", err)
+		}
+	}
+	
+	return nil
+}
+
+
+func GetTransaction(transactionID int) (*utils.TransactionResponse, error) {
+	transactionResp := &utils.TransactionResponse{}
+
+	transactionResp.TransactionID = strconv.Itoa(transactionID)
+
+	// Get transaction name
+	err := db.QueryRow("SELECT name FROM transactions WHERE id = ?", transactionID).Scan(&transactionResp.Name)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get transaction name: %v", err)
+	}
+
+	// get apis
+	rows, err := db.Query("SELECT url, method, request FROM api_config WHERE id IN (SELECT api_id FROM transaction_api WHERE transaction_id = ?)", transactionID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get transaction APIs: %v", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		api := utils.TransactionAPIResp{}
+		err := rows.Scan(&api.URL, &api.Method, &api.Request)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan transaction API: %v", err)
+		}
+		transactionResp.APIs = append(transactionResp.APIs, api)
+	}
+
+	// Get transaction APIs
+	rows, err = db.Query("SELECT api_id, sequence, dependency FROM transaction_api WHERE transaction_id = ?", transactionID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get transaction APIs: %v", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var dependency map[string]utils.Dependency
+		var dependencyJSON string
+		var apiID, sequence int
+
+		err := rows.Scan(&apiID, &sequence, &dependencyJSON)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan transaction API: %v", err)
+		}
+
+		err = json.Unmarshal([]byte(dependencyJSON), &dependency)
+		if err != nil {
+			return nil, fmt.Errorf("failed to unmarshal dependency: %v", err)
+		}
+
+		transactionResp.APIs[sequence].Dependency = dependency
+	}
+
+	return transactionResp, nil
+}

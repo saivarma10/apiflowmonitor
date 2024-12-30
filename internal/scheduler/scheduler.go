@@ -30,7 +30,7 @@ func (tm *TaskManager) CreateTask(id string, name string, interval time.Duration
 		return fmt.Errorf("task with ID %s already exists", id)
 	}
 
-	job, err := tm.scheduler.Every(interval).Do(fn)
+	job, err := tm.scheduler.Every(interval).Tag(id).Do(fn)
 	if err != nil {
 		return fmt.Errorf("failed to schedule task: %v interval %v   ", err, interval)
 	}
@@ -55,7 +55,7 @@ func (tm *TaskManager) UpdateTask(id string, newInterval time.Duration) error {
 
 	tm.scheduler.RemoveByTag(id)
 
-	job, err := tm.scheduler.Every(newInterval).Do(task.Function)
+	job, err := tm.scheduler.Every(newInterval).Tag(id).Do(task.Function)
 	if err != nil {
 		return fmt.Errorf("failed to update task: %v", err)
 	}
