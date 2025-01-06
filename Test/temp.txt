@@ -1,0 +1,39 @@
+curl --location 'http://localhost:8081/get-transaction' \
+--header 'Content-Type: text/plain' \
+--data '{
+    "transaction_id": "1"
+}
+'
+
+curl --location 'http://localhost:8081/create' \
+--header 'Content-Type: application/json' \
+--data '{
+  "transactions": [
+    {
+      "transaction_id": "12345678",
+      "name": "Sample Transaction 1",
+      "frequency": 5,
+      "apis": [
+        {
+          "url": "http://localhost:9090/1",
+          "method": "POST",
+          "request": "{\"user\": \"sai\", \"password\": \"pass\"}",
+          "dependency": {}
+        },
+        {
+          "url": "http://localhost:9090/2",
+          "method": "POST",
+          "request": "{\"user\": \"$user\", \"exists\": \"true\"}",
+          "dependency": {}
+        },
+        {
+          "url": "http://localhost:9090/3",
+          "method": "GET",
+          "request": "",
+          "dependency": {}
+        }
+      ]
+    }
+  ]
+}
+'
